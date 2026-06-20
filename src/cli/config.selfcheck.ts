@@ -157,8 +157,39 @@ async function selfCheck(): Promise<void> {
 		}
 		assert(guidance.includes('default export'), `no-default-export should give guidance, got: ${guidance}`);
 
+		// --- NEW: per-font cssVariable + inline:false serialize into the config.
+		const cfg7 = join(dir, 'vars');
+		mkdirSync(cfg7);
+		const varsPath = join(cfg7, 'vite.config.ts');
+		writeFileSync(varsPath, FIXTURE, 'utf8');
+		const r7 = await editViteConfig({
+			configPath: varsPath,
+			fonts: ['Roboto', { family: 'Inter', cssVariable: '--font-display' }],
+			source: 'cdn',
+			inline: false,
+			dryRun: false,
+		});
+		assert(r7.action === 'added', `vars run expected 'added', got '${r7.action}'`);
+		const vars = readFileSync(varsPath, 'utf8');
+		assert(
+			vars.includes(`cssVariable: '--font-display'`) || vars.includes(`cssVariable: "--font-display"`),
+			'cssVariable should serialize into the object entry',
+		);
+		assert(/family:\s*['"]Inter['"]/.test(vars), 'object entry should carry family: Inter');
+		assert(vars.includes('Roboto'), 'bare string entry (no cssVariable) should remain a string');
+		assert(/inline:\s*false/.test(vars), 'inline: false should serialize');
+
+		// inline:true (the plugin default) must NOT write the key.
+		const cfg8 = join(dir, 'inline-default');
+		mkdirSync(cfg8);
+		const inlPath = join(cfg8, 'vite.config.ts');
+		writeFileSync(inlPath, FIXTURE, 'utf8');
+		await editViteConfig({ configPath: inlPath, fonts: ['Inter'], source: 'cdn', inline: true, dryRun: false });
+		assert(!/inline/.test(readFileSync(inlPath, 'utf8')), 'inline:true must be omitted (plugin default)');
+
 		console.log('config.ts self-check: ALL PASSED');
 		console.log('--- final config ---\n' + after1);
+		console.log('--- vars config ---\n' + vars);
 	} finally {
 		rmSync(dir, { recursive: true, force: true });
 	}

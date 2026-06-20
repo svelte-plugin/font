@@ -1,6 +1,6 @@
 {
   "name": "@svelte-plugin/font",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Zero-config SvelteKit/Vite font plugin: auto-detect, self-host, and metric-matched fallbacks that eliminate layout shift.",
   "license": "MIT",
   "author": "Arnaud Derbey <arnaud@derbey.dev>",

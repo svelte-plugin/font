@@ -53,17 +53,39 @@ export function findViteConfig(cwd: string): string | null {
 	return null;
 }
 
+/** A font request from the CLI: a bare family, or one with a chosen CSS variable. */
+export type FontPick = string | { family: string; cssVariable?: string };
+
+/**
+ * Serialize picks to `fonts` array entries: a bare string when no variable was
+ * chosen, or `{ family, cssVariable }` when one was. Drops any extra keys (e.g.
+ * the CLI's `category`) so only plugin-recognized fields reach the config.
+ */
+function toEntries(fonts: FontPick[]): Array<string | { family: string; cssVariable: string }> {
+	return fonts.map((f) => {
+		const o = typeof f === 'string' ? { family: f } : f;
+		return o.cssVariable ? { family: o.family, cssVariable: o.cssVariable } : o.family;
+	});
+}
+
 /**
  * Build the options object that should serialize as the plugin's args:
  * - empty `fonts`  -> omit the key (rely on auto-detect)
  * - source 'cdn'   -> omit the key (plugin default applies)
+ * - inline true    -> omit the key (plugin default is true)
  * So a bare run yields `font()`, a download+picks run yields
- * `font({ fonts: ['A','B'], source: 'download' })`.
+ * `font({ fonts: ['A', { family: 'B', cssVariable: '--font-b' }], source: 'download' })`.
  */
-function buildOptions(fonts: string[], source: 'cdn' | 'download'): Record<string, unknown> {
+function buildOptions(
+	fonts: FontPick[],
+	source: 'cdn' | 'download',
+	inline: boolean,
+): Record<string, unknown> {
 	const options: Record<string, unknown> = {};
-	if (fonts.length) options.fonts = fonts;
+	const entries = toEntries(fonts);
+	if (entries.length) options.fonts = entries;
 	if (source !== SOURCE_DEFAULT) options.source = source;
+	if (!inline) options.inline = false;
 	return options;
 }
 
@@ -120,11 +142,14 @@ function findExisting(mod: ViteModule) {
  */
 export async function editViteConfig(args: {
 	configPath: string;
-	fonts: string[];
+	fonts: FontPick[];
 	source: 'cdn' | 'download';
+	/** Inline the stylesheet into the SSR <head>. Default true (the plugin default). */
+	inline?: boolean;
 	dryRun: boolean;
 }): Promise<ConfigEditResult> {
 	const { configPath, fonts, source, dryRun } = args;
+	const inline = args.inline ?? true;
 
 	let mod: ViteModule;
 	try {
@@ -154,7 +179,7 @@ export async function editViteConfig(args: {
 			);
 		}
 
-		const options = buildOptions(fonts, source);
+		const options = buildOptions(fonts, source, inline);
 		const existing = findExisting(mod);
 
 		let action: ConfigEditResult['action'];
@@ -182,15 +207,15 @@ export async function editViteConfig(args: {
 				index,
 			});
 			action = 'added';
-		} else if (fonts.length === 0 && source === SOURCE_DEFAULT) {
+		} else if (fonts.length === 0 && source === SOURCE_DEFAULT && inline) {
 			// ---- UNCHANGED --------------------------------------------------------
 			// Already configured and the caller expressed no new intent: don't touch a
 			// hand-tuned config.
 			action = 'unchanged';
 		} else {
 			// ---- UPDATE -----------------------------------------------------------
-			// Merge fonts/source onto the existing first arg, preserving every other
-			// key (e.g. autoDetect). CRITICAL: when the existing call is a bare
+			// Merge fonts/source/inline onto the existing first arg, preserving every
+			// other key (e.g. autoDetect). CRITICAL: when the existing call is a bare
 			// `font()` (zero args), returning a new args array from the handler is a
 			// no-op on magicast's getter-based $args proxy — the picks would be
 			// silently discarded. So set $args[0] directly in that case; otherwise
@@ -199,9 +224,12 @@ export async function editViteConfig(args: {
 				existing.$args[0] = options;
 			} else {
 				const cur = existing.$args[0];
-				if (fonts.length) cur.fonts = fonts;
+				const entries = toEntries(fonts);
+				if (entries.length) cur.fonts = entries;
 				if (source !== SOURCE_DEFAULT) cur.source = source;
 				else delete cur.source; // back to the plugin default.
+				if (!inline) cur.inline = false;
+				else delete cur.inline; // back to the plugin default (true).
 			}
 			action = 'updated';
 		}
@@ -230,8 +258,9 @@ export async function editViteConfig(args: {
  */
 export async function addFontToViteConfig(args: {
 	cwd: string;
-	fonts: string[];
+	fonts: FontPick[];
 	source: 'cdn' | 'download';
+	inline?: boolean;
 	dryRun: boolean;
 }): Promise<ConfigEditResult> {
 	const configPath = findViteConfig(args.cwd);
@@ -245,6 +274,7 @@ export async function addFontToViteConfig(args: {
 		configPath,
 		fonts: args.fonts,
 		source: args.source,
+		inline: args.inline,
 		dryRun: args.dryRun,
 	});
 }
