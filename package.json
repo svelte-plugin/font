@@ -1,6 +1,6 @@
 {
   "name": "@svelte-plugin/font",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Zero-config SvelteKit/Vite font plugin: auto-detect, self-host, and metric-matched fallbacks that eliminate layout shift.",
   "license": "MIT",
   "author": "Arnaud Derbey <arnaud@derbey.dev>",
@@ -55,6 +55,7 @@
   "dependencies": {
     "@clack/prompts": "^1.6.0",
     "fontaine": "^0.8.0",
+    "fontkit": "^2.0.4",
     "magicast": "^0.5.3",
     "unifont": "^0.7.4"
   },
@@ -67,7 +68,6 @@
     "@types/fontkit": "^2.0.9",
     "@types/node": "^26.0.0",
     "esbuild": "^0.28.1",
-    "fontkit": "^2.0.4",
     "publint": "^0.3.21",
     "svelte": "^5.56.1",
     "svelte-check": "^4.6.0",
