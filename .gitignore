@@ -1,0 +1,31 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+/dist
+
+# Plugin: generated debug dump + self-hosted download cache (regenerated)
+svelte-plugin-font.debug.css
+/static/hosted_fonts
+
+# Commercial font — NOT redistributable, kept local only
+SuisseIntl-Semibold.otf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

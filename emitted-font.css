@@ -1,0 +1,197 @@
+@font-face {
+  font-family: "Inter";
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Inter fallback";
+  src: local("BlinkMacSystemFont");
+  size-adjust: 114.6542%;
+  ascent-override: 84.4932%;
+  descent-override: 21.0381%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Inter fallback";
+  src: local("Segoe UI");
+  size-adjust: 107.7093%;
+  ascent-override: 89.9412%;
+  descent-override: 22.3946%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Inter fallback";
+  src: local("Helvetica Neue");
+  size-adjust: 106.1198%;
+  ascent-override: 91.2883%;
+  descent-override: 22.7301%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Inter fallback";
+  src: local("Arial");
+  size-adjust: 107.1194%;
+  ascent-override: 90.4365%;
+  descent-override: 22.518%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Inter fallback";
+  src: local("Noto Sans");
+  size-adjust: 100.7466%;
+  ascent-override: 96.1571%;
+  descent-override: 23.9423%;
+  line-gap-override: 0%;
+}
+
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbV2o-flEEny0FZhsfKu5WU4xD7OwGtT0rU.woff2) format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "JetBrains Mono fallback";
+  src: local("Courier New");
+  size-adjust: 99.9837%;
+  ascent-override: 102.0166%;
+  descent-override: 30.0049%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "JetBrains Mono fallback";
+  src: local("Roboto Mono");
+  size-adjust: 99.9837%;
+  ascent-override: 102.0166%;
+  descent-override: 30.0049%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "JetBrains Mono fallback";
+  src: local("Noto Sans Mono");
+  size-adjust: 100%;
+  ascent-override: 102%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}
+
+
+@font-face {
+  font-family: "Google Sans Flex";
+  src: url(https://fonts.gstatic.com/s/googlesansflex/v21/t5s6IQcYNIWbFgDgAAzZ34auoVyXkJCOvp3SFWJbN5hF8Ju1x6sKCyp0l9sI40swNJwInycYAJzz0m7kJ4qFQOJBOjLvDSndo0SKMpKSTzwliVdHAy4xyRg2eWQTmw.woff2) format("woff2");
+  font-weight: 1 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Google Sans Flex fallback";
+  src: local("BlinkMacSystemFont");
+  size-adjust: 108.4023%;
+  ascent-override: 89.1125%;
+  descent-override: 26.3832%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Google Sans Flex fallback";
+  src: local("Segoe UI");
+  size-adjust: 101.8361%;
+  ascent-override: 94.8583%;
+  descent-override: 28.0843%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Google Sans Flex fallback";
+  src: local("Helvetica Neue");
+  size-adjust: 100.3333%;
+  ascent-override: 96.2791%;
+  descent-override: 28.505%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Google Sans Flex fallback";
+  src: local("Arial");
+  size-adjust: 101.2784%;
+  ascent-override: 95.3806%;
+  descent-override: 28.239%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Google Sans Flex fallback";
+  src: local("Noto Sans");
+  size-adjust: 95.2532%;
+  ascent-override: 101.414%;
+  descent-override: 30.0252%;
+  line-gap-override: 0%;
+}
+
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgEM86xQ.woff2) format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Playfair Display fallback";
+  src: local("Times New Roman");
+  size-adjust: 111.2615%;
+  ascent-override: 97.2483%;
+  descent-override: 22.5595%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Playfair Display fallback";
+  src: local("Georgia");
+  size-adjust: 101.3906%;
+  ascent-override: 106.716%;
+  descent-override: 24.7558%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Playfair Display fallback";
+  src: local("Noto Serif");
+  size-adjust: 93.9709%;
+  ascent-override: 115.142%;
+  descent-override: 26.7104%;
+  line-gap-override: 0%;
+}
+
+
+/* Per-font CSS variables. --font-<family> is always set (rewritten
+   font-family usages reference it). The category var (--font-sans/serif/
+   mono) is also set by default for Tailwind; set `cssVariable` to override. */
+:root {
+  --font-inter: Inter, "Inter fallback", BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans";
+  --font-sans: Inter, "Inter fallback", BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans";
+  --font-jetbrains-mono: "JetBrains Mono", "JetBrains Mono fallback", "Courier New", "Roboto Mono", "Noto Sans Mono";
+  --font-mono: "JetBrains Mono", "JetBrains Mono fallback", "Courier New", "Roboto Mono", "Noto Sans Mono";
+  --font-google-sans-flex: "Google Sans Flex", "Google Sans Flex fallback", BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans";
+  --font-sans: "Google Sans Flex", "Google Sans Flex fallback", BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans";
+  --font-playfair-display: "Playfair Display", "Playfair Display fallback", "Times New Roman", Georgia, "Noto Serif";
+  --font-serif: "Playfair Display", "Playfair Display fallback", "Times New Roman", Georgia, "Noto Serif";
+}
