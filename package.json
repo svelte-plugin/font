@@ -1,6 +1,6 @@
 {
   "name": "@svelte-plugin/font",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Zero-config SvelteKit/Vite font plugin: auto-detect, self-host, and metric-matched fallbacks that eliminate layout shift.",
   "license": "MIT",
   "author": "Arnaud Derbey <arnaud@derbey.dev>",
@@ -44,7 +44,7 @@
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "prepack": "svelte-kit sync && svelte-package && npm run build:cli && publint",
-    "build:cli": "esbuild src/cli/index.ts --bundle --platform=node --format=esm --outfile=dist/cli.js --packages=external --banner:js='#!/usr/bin/env node' && chmod +x dist/cli.js",
+    "build:cli": "esbuild src/cli/index.ts --bundle --platform=node --format=esm --outfile=dist/cli.js --banner:js='#!/usr/bin/env node' && chmod +x dist/cli.js",
     "fonts:gen": "node scripts/generate-google-fonts.ts",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
@@ -53,13 +53,12 @@
     "vite": "^8.0.0"
   },
   "dependencies": {
-    "@clack/prompts": "^1.6.0",
     "fontaine": "^0.8.0",
     "fontkit": "^2.0.4",
-    "magicast": "^0.5.3",
     "unifont": "^0.7.4"
   },
   "devDependencies": {
+    "@clack/prompts": "^1.6.0",
     "@sveltejs/adapter-auto": "^7.0.1",
     "@sveltejs/kit": "^2.63.0",
     "@sveltejs/package": "^2.5.8",
@@ -68,6 +67,7 @@
     "@types/fontkit": "^2.0.9",
     "@types/node": "^26.0.0",
     "esbuild": "^0.28.1",
+    "magicast": "^0.5.3",
     "publint": "^0.3.21",
     "svelte": "^5.56.1",
     "svelte-check": "^4.6.0",
