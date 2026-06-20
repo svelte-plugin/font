@@ -25,6 +25,7 @@ import {
 	SOURCE_DEFAULT,
 	findViteConfig,
 	editViteConfig,
+	normalizeVar,
 	type ConfigEditResult,
 } from './config.ts';
 import {
@@ -252,33 +253,48 @@ async function main(): Promise<void> {
 		fonts = []; // non-TTY default: rely on auto-detect.
 	}
 
-	// 4b. PER-FONT CSS VARIABLE. Preselect the category var (--font-sans/serif/
-	// mono); the user may pick any custom property. We persist `cssVariable` when
-	// it differs from the category default, OR when there's no Tailwind to map the
-	// category var (so the chosen var is always emitted). Only prompt for fonts
-	// chosen via the interactive picker (a --fonts run keeps the category default).
-	type Pick = { family: string; category: 'sans' | 'serif' | 'mono'; cssVariable?: string };
+	// 4b. PER-FONT CSS VARIABLE. A selector offers the three category vars
+	// (--font-sans/serif/mono — matching Tailwind's font-* utilities), preselected
+	// by the font's category, plus "Custom…" for any other property (a missing
+	// `--` prefix is added). The chosen var is ALWAYS written to the config so the
+	// mapping is explicit. A --fonts run (non-interactive) keeps the category var.
+	type Pick = { family: string; category: 'sans' | 'serif' | 'mono'; cssVariable: string };
 	const tailwind = pkgInfo ? hasDep(pkgInfo.json, 'tailwindcss') : false;
 	const pickedInteractively = flags.fonts === undefined && interactive;
 	const picks: Pick[] = [];
 	for (const family of fonts) {
 		const category = categoryHint(family) ?? 'sans';
-		const defVar = categoryToVar(category);
-		let chosen: string = defVar;
+		let cssVariable: string = categoryToVar(category);
 		if (pickedInteractively) {
-			chosen = ok(
-				await p.text({
+			const choice = ok(
+				await p.select<'sans' | 'serif' | 'mono' | 'custom'>({
 					message: `CSS variable for ${family}?`,
-					initialValue: defVar,
-					validate: (v) =>
-						/^--[A-Za-z0-9-]+$/.test((v ?? '').trim())
-							? undefined
-							: 'Must be a CSS custom property, e.g. --font-display',
+					initialValue: category,
+					options: [
+						{ value: 'sans', label: '--font-sans', hint: 'Tailwind font-sans' },
+						{ value: 'serif', label: '--font-serif', hint: 'Tailwind font-serif' },
+						{ value: 'mono', label: '--font-mono', hint: 'Tailwind font-mono' },
+						{ value: 'custom', label: 'Custom…', hint: 'your own property name' },
+					],
 				}),
-			).trim();
+			);
+			if (choice === 'custom') {
+				const raw = ok(
+					await p.text({
+						message: `Custom CSS variable for ${family}?`,
+						placeholder: '--font-display',
+						validate: (v) =>
+							/^--[A-Za-z0-9-]+$/.test(normalizeVar(v ?? ''))
+								? undefined
+								: 'Letters, digits and dashes only, e.g. --font-display',
+					}),
+				);
+				cssVariable = normalizeVar(raw);
+			} else {
+				cssVariable = categoryToVar(choice);
+			}
 		}
-		const cssVariable = chosen !== defVar || !tailwind ? chosen : undefined;
-		picks.push({ family, category, ...(cssVariable ? { cssVariable } : {}) });
+		picks.push({ family, category, cssVariable });
 	}
 
 	// 4c. INLINE the stylesheet into the SSR <head> (default true: no layout shift
@@ -314,10 +330,11 @@ async function main(): Promise<void> {
 	// var (--font-<family>, always set); the selected/category var is listed too.
 	if (picks.length) {
 		const rows = picks.map((pk) => {
-			const sel = pk.cssVariable ?? categoryToVar(pk.category);
+			const sel = pk.cssVariable;
 			const fam = perFamilyVar(pk.family);
-			const util =
-				tailwind && sel === categoryToVar(pk.category) ? `   (or Tailwind: font-${pk.category})` : '';
+			// font-sans/serif/mono utilities map to the matching category var.
+			const m = sel.match(/^--font-(sans|serif|mono)$/);
+			const util = tailwind && m ? `   (or Tailwind: font-${m[1]})` : '';
 			return `${pk.family}\n  var(${sel})${util}\n  var(${fam})`;
 		});
 		p.note(rows.join('\n\n'), 'CSS variables you can use');

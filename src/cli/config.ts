@@ -57,14 +57,27 @@ export function findViteConfig(cwd: string): string | null {
 export type FontPick = string | { family: string; cssVariable?: string };
 
 /**
+ * Normalize a user-supplied CSS custom property: collapse any leading dashes to
+ * exactly one `--` prefix, so `font-x`, `-font-x`, and `--font-x` all become
+ * `--font-x`. Empty input stays empty. Idempotent.
+ */
+export function normalizeVar(s: string): string {
+	const rest = s.trim().replace(/^-+/, '');
+	return rest ? `--${rest}` : '';
+}
+
+/**
  * Serialize picks to `fonts` array entries: a bare string when no variable was
- * chosen, or `{ family, cssVariable }` when one was. Drops any extra keys (e.g.
- * the CLI's `category`) so only plugin-recognized fields reach the config.
+ * chosen, or `{ family, cssVariable }` when one was (normalized to a `--` prefix).
+ * Drops any extra keys (e.g. the CLI's `category`) so only plugin-recognized
+ * fields reach the config.
  */
 function toEntries(fonts: FontPick[]): Array<string | { family: string; cssVariable: string }> {
 	return fonts.map((f) => {
 		const o = typeof f === 'string' ? { family: f } : f;
-		return o.cssVariable ? { family: o.family, cssVariable: o.cssVariable } : o.family;
+		return o.cssVariable
+			? { family: o.family, cssVariable: normalizeVar(o.cssVariable) }
+			: o.family;
 	});
 }
 

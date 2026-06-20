@@ -9,7 +9,7 @@
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { addFontToViteConfig, editViteConfig } from './config.ts';
+import { addFontToViteConfig, editViteConfig, normalizeVar } from './config.ts';
 
 const FIXTURE = `import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
@@ -187,9 +187,45 @@ async function selfCheck(): Promise<void> {
 		await editViteConfig({ configPath: inlPath, fonts: ['Inter'], source: 'cdn', inline: true, dryRun: false });
 		assert(!/inline/.test(readFileSync(inlPath, 'utf8')), 'inline:true must be omitted (plugin default)');
 
+		// --- normalizeVar: leading dashes collapse to exactly one `--`.
+		assert(normalizeVar('font-display') === '--font-display', 'normalizeVar adds --');
+		assert(normalizeVar('-font-display') === '--font-display', 'normalizeVar fixes a single dash');
+		assert(normalizeVar('--font-display') === '--font-display', 'normalizeVar keeps --');
+		assert(normalizeVar('---x') === '--x', 'normalizeVar collapses extra dashes');
+		assert(normalizeVar('  brand  ') === '--brand', 'normalizeVar trims');
+		assert(normalizeVar('') === '', 'normalizeVar empty stays empty');
+
+		// --- UPDATE path serializes object entries onto an EXISTING font() call,
+		// normalizing a missing `--`, replacing the old list, and preserving keys.
+		// (Regression guard for "cssVariable props missing from the config".)
+		const cfg9 = join(dir, 'update-objs');
+		mkdirSync(cfg9);
+		const u9 = join(cfg9, 'vite.config.ts');
+		writeFileSync(
+			u9,
+			`import font from '@svelte-plugin/font';\nimport { defineConfig } from 'vite';\nexport default defineConfig({ plugins: [font({ fonts: ['Old'], autoDetect: false })] });\n`,
+			'utf8',
+		);
+		const r9 = await editViteConfig({
+			configPath: u9,
+			fonts: [{ family: 'Inter', cssVariable: 'font-display' }], // missing -- on purpose
+			source: 'cdn',
+			dryRun: false,
+		});
+		assert(r9.action === 'updated', `update-objs expected 'updated', got '${r9.action}'`);
+		const u9out = readFileSync(u9, 'utf8');
+		assert(/family:\s*['"]Inter['"]/.test(u9out), 'UPDATE must serialize the object entry family');
+		assert(
+			u9out.includes(`cssVariable: '--font-display'`) || u9out.includes(`cssVariable: "--font-display"`),
+			'UPDATE must serialize the normalized cssVariable',
+		);
+		assert(u9out.includes('autoDetect'), 'UPDATE must preserve autoDetect');
+		assert(!/['"]Old['"]/.test(u9out), 'UPDATE must replace the old fonts array');
+
 		console.log('config.ts self-check: ALL PASSED');
 		console.log('--- final config ---\n' + after1);
 		console.log('--- vars config ---\n' + vars);
+		console.log('--- update-with-objects config ---\n' + u9out);
 	} finally {
 		rmSync(dir, { recursive: true, force: true });
 	}
