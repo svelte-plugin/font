@@ -27,6 +27,7 @@ import { detectTailwind, perFamilyVar } from './tailwind.js';
 import { buildFontCss } from './css.js';
 import { famKey, rewriteFontFamily } from './rewrite.js';
 import { scanLocalFonts } from './local.js';
+import { fontModule, type FontManifest } from './font-module.js';
 import {
 	GOOGLE_FONT_NAMES,
 	type GoogleFontName,
@@ -34,6 +35,10 @@ import {
 
 const VIRTUAL_ID = 'virtual:font.css';
 const RESOLVED_ID = '\0' + VIRTUAL_ID; // NUL prefix marks it internal/virtual
+// JS module exposing every resolved font (var + woff2 preload urls) and
+// `fontHandle`, which applies + preloads a font chosen per request.
+const MODULE_ID = 'virtual:font';
+const RESOLVED_MODULE_ID = '\0' + MODULE_ID;
 // Component-local const holding the inlined <style> markup (inline mode).
 const STYLE_VAR = '__svelte_plugin_font_inline';
 
@@ -83,6 +88,8 @@ export default function fontPlugin(userOptions: FontPluginOptions = {}): Plugin[
 	let rewriteMap = new Map<string, string>();
 	// <link rel="preload"> tags for fonts marked preload:true, injected into <head>.
 	let preloadLinks: string[] = [];
+	// family -> { variable, preload }, served (with fontHandle) as virtual:font.
+	let manifest: FontManifest = {};
 	// Cached local-font scan (post-override). null = needs (re)scan. Invalidated by
 	// handleHotUpdate only when a font file changes, so source edits don't re-walk static/.
 	let cachedLocal: ResolvedFont[] | null = null;
@@ -205,6 +212,13 @@ export default function fontPlugin(userOptions: FontPluginOptions = {}): Plugin[
 				].map(preloadTag)
 			: [];
 
+		// Manifest for per-request font choice: every resolved font (declared,
+		// auto-detected, local) keyed by family. Everything in it also shows up in the
+		// CSS (var names + urls), so a change here always changes `css` — HMR keys on that.
+		manifest = Object.fromEntries(
+			finalResolved.map((r) => [r.family, { variable: perFamilyVar(r.family), preload: woff2Hrefs(r) }]),
+		);
+
 		// Build the usage-rewrite map: every resolved font -> its per-family var
 		// (--font-<family>), which css.ts always emits in :root and which holds the
 		// web font + metric fallback + generics. Local families are in finalResolved
@@ -288,13 +302,15 @@ export default function fontPlugin(userOptions: FontPluginOptions = {}): Plugin[
 			return out === code ? undefined : out;
 		},
 
-		// Claim + serve virtual:font.css.
+		// Claim + serve virtual:font.css and virtual:font.
 		resolveId(id) {
 			if (id === VIRTUAL_ID) return RESOLVED_ID;
+			if (id === MODULE_ID) return RESOLVED_MODULE_ID;
 			return undefined;
 		},
 		load(id) {
 			if (id === RESOLVED_ID) return css;
+			if (id === RESOLVED_MODULE_ID) return fontModule(manifest);
 			return undefined;
 		},
 
@@ -347,6 +363,12 @@ export default function fontPlugin(userOptions: FontPluginOptions = {}): Plugin[
 					targetServer.moduleGraph.invalidateModule(mod);
 					updated.push(mod);
 				}
+			}
+			// virtual:font mirrors the resolved fonts, so refresh it whenever the CSS changed.
+			const man = targetServer.moduleGraph.getModuleById(RESOLVED_MODULE_ID);
+			if (man) {
+				targetServer.moduleGraph.invalidateModule(man);
+				updated.push(man);
 			}
 			return updated;
 		},

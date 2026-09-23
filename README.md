@@ -206,6 +206,51 @@ A local font wins over a Google family of the same name. `woff2` is recommended,
 > font({ local: { exclude: ['og', 'assets'] } }); // skips static/og/ and static/assets/
 > ```
 
+### A font chosen per user
+
+Let users pick their fonts (from a session, DB, or cookie) and keep every optimization. Declare
+all the choices, then add one hook:
+
+```ts
+// no `preload: true` — that would preload every choice for everyone
+font({ fonts: ['Inter', 'Roboto', 'Lora', 'Merriweather', 'JetBrains Mono', 'Fira Code'] });
+```
+
+```ts
+// src/hooks.server.ts
+import { fontHandle } from 'virtual:font';
+
+export const handle = fontHandle(({ locals }) => ({
+  sans: locals.user?.sans,
+  serif: locals.user?.serif,
+  mono: locals.user?.mono,
+}));
+```
+
+For each HTML page, `fontHandle` points `--font-sans`, `--font-serif` and `--font-mono` (what
+Tailwind's `font-sans/serif/mono` use) at the chosen fonts with an inline style on `<html>`, and
+sends `Link: rel=preload` headers, so the downloads start before the HTML is even parsed. The first
+paint is already in the user's fonts (or their metric-matched fallbacks), and the other choices
+are never downloaded — an `@font-face` only fetches when text uses it.
+
+- **Any slot:** each key sets `--font-<key>` (`display` → `--font-display`); a key starting with
+  `--` is used as-is. Return a plain string as shorthand for `{ sans }`.
+- **The picker** receives the `RequestEvent`, may be async, and runs once per page, after your
+  `load` functions (a `load` can set `locals.*`). Endpoints and `__data.json` are skipped.
+- **Unset or unknown** families keep the default for that slot, and user input never reaches the
+  HTML — only the plugin's own values do. A failing picker is logged, never a broken page.
+- Compose with your own hooks via `sequence()` from `@sveltejs/kit/hooks`.
+
+To switch without a reload, `fonts` (every resolved font, keyed by family) has each font's variable:
+
+```ts
+import { fonts } from 'virtual:font';
+
+const font = fonts[family];
+if (font) document.documentElement.style.setProperty('--font-serif', `var(${font.variable})`);
+// …and persist the choice so the next server render picks it up.
+```
+
 ## Configuration
 
 ```ts
