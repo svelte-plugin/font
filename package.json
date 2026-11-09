@@ -1,6 +1,6 @@
 {
   "name": "@svelte-plugin/font",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Zero-config SvelteKit/Vite font plugin: auto-detect, self-host, and metric-matched fallbacks that eliminate layout shift.",
   "license": "MIT",
   "author": "Arnaud Derbey <arnaud@derbey.dev>",
@@ -51,7 +51,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
   },
   "peerDependencies": {
-    "@sveltejs/kit": "^2.0.0",
+    "@sveltejs/kit": "^2.0.0 || ^3.0.0",
     "vite": "^8.0.0"
   },
   "dependencies": {

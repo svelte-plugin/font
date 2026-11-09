@@ -42,6 +42,20 @@ const RESOLVED_MODULE_ID = '\0' + MODULE_ID;
 // Component-local const holding the inlined <style> markup (inline mode).
 const STYLE_VAR = '__svelte_plugin_font_inline';
 
+// SvelteKit's root component, rendered on every page. Kit 2 writes it on sync
+// (`.svelte-kit/generated/root.svelte`); Kit 3 ships a static one in its
+// runtime, which dev serves with a `?v=` query.
+const ROOT_SUFFIXES = ['/generated/root.svelte', '/@sveltejs/kit/src/runtime/components/root.svelte'];
+
+/** The root component's file when `id` is that module, else undefined. */
+function rootFileOf(id: string): string | undefined {
+	const [file, query = ''] = id.replace(/\\/g, '/').split('?', 2);
+	// `v` versions a dependency, `t` an HMR update; any other parameter asks for
+	// something else, such as vite-plugin-svelte's `?svelte&type=style`.
+	if ([...new URLSearchParams(query).keys()].some((key) => key !== 'v' && key !== 't')) return undefined;
+	return ROOT_SUFFIXES.some((suffix) => file.endsWith(suffix)) ? file : undefined;
+}
+
 /** Insert `stmt` right after the first <script ...> in svelte source (or wrap one). */
 function injectIntoScript(code: string, stmt: string): string {
 	const open = code.match(/<script[^>]*>/);
@@ -93,6 +107,8 @@ export default function fontPlugin(userOptions: FontPluginOptions = {}): Plugin[
 	// Cached local-font scan (post-override). null = needs (re)scan. Invalidated by
 	// handleHotUpdate only when a font file changes, so source edits don't re-walk static/.
 	let cachedLocal: ResolvedFont[] | null = null;
+	// Root component files the transform injected into: inline-mode HMR re-transforms them.
+	const rootFiles = new Set<string>();
 
 	/** Full pipeline -> the single emitted stylesheet string. */
 	async function generate(): Promise<string> {
@@ -264,14 +280,16 @@ export default function fontPlugin(userOptions: FontPluginOptions = {}): Plugin[
 			await maybeWriteDebug(css);
 		},
 
-		// MAGIC: into SvelteKit's synthetic root component
-		// (.svelte-kit/generated/root.svelte — ALWAYS present, with or without a
-		// user +layout.svelte) inject (a) the `import 'virtual:font.css'` so the CSS
+		// MAGIC: into SvelteKit's root component (Kit 2's generated
+		// .svelte-kit/generated/root.svelte, Kit 3's runtime root.svelte — ALWAYS
+		// rendered, with or without a user +layout.svelte) inject (a) the `import 'virtual:font.css'` so the CSS
 		// lands in %sveltekit.head% on every route, and (b) a <svelte:head> with the
 		// <link rel="preload"> tags for fonts marked preload:true. Runs in the 'pre'
 		// phase, before vite-plugin-svelte compiles it.
 		transform(code, id) {
-			if (!id.replace(/\\/g, '/').endsWith('/generated/root.svelte')) return undefined;
+			const rootFile = rootFileOf(id);
+			if (!rootFile) return undefined;
+			rootFiles.add(rootFile);
 			let out = code;
 			const headParts: string[] = [];
 
@@ -349,12 +367,13 @@ export default function fontPlugin(userOptions: FontPluginOptions = {}): Plugin[
 			const updated = [...ctx.modules];
 
 			if (options.inline) {
-				// Inline mode: the <style> is baked into the generated root component,
-				// so re-transform it (the virtual module isn't imported).
-				const rootFile = path.resolve(config.root, '.svelte-kit/generated/root.svelte');
-				for (const m of targetServer.moduleGraph.getModulesByFile(rootFile) ?? []) {
-					targetServer.moduleGraph.invalidateModule(m);
-					updated.push(m);
+				// Inline mode: the <style> is baked into the root component, so
+				// re-transform it (the virtual module isn't imported).
+				for (const rootFile of rootFiles) {
+					for (const m of targetServer.moduleGraph.getModulesByFile(rootFile) ?? []) {
+						targetServer.moduleGraph.invalidateModule(m);
+						updated.push(m);
+					}
 				}
 			} else {
 				// Linked mode: invalidate the virtual module so its <style> hot-updates.

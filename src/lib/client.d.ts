@@ -48,5 +48,11 @@ declare module 'virtual:font' {
 	 */
 	export function fontHandle(
 		pick: (event: import('@sveltejs/kit').RequestEvent) => FontPick | Promise<FontPick>,
-	): import('@sveltejs/kit').Handle;
+	): Handle;
+
+	/**
+	 * SvelteKit's `Handle`: exported by `@sveltejs/kit` in Kit 2, by `@sveltejs/kit/hooks` in Kit 3. `sequence()`
+	 * returns one in both.
+	 */
+	type Handle = ReturnType<typeof import('@sveltejs/kit/hooks').sequence>;
 }
